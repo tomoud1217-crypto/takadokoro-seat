@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>田所商店 席管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .seat {
+      padding: 30px;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .available { background: green; }
+    .occupied { background: red; }
+    .reserved { background: blue; }
+    .cleaning { background: orange; }
+
+  </style>
+</head>
+<body>
+
+<h1>田所商店 席管理</h1>
+
+<div class="grid" id="seats"></div>
+
+<script>
+  const supabaseUrl = "YOUR_SUPABASE_URL";
+  const supabaseKey = "YOUR_SUPABASE_ANON_KEY";
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function loadSeats() {
+    const { data } = await supabase.from("seats").select("*");
+    const container = document.getElementById("seats");
+    container.innerHTML = "";
+
+    data.forEach(seat => {
+      const div = document.createElement("div");
+      div.className = "seat " + seat.status;
+      div.innerText = seat.name;
+      div.onclick = () => changeStatus(seat);
+      container.appendChild(div);
+    });
+  }
+
+  async function changeStatus(seat) {
+    const statuses = ["available", "occupied", "reserved", "cleaning"];
+    const next = statuses[(statuses.indexOf(seat.status)+1)%4];
+
+    await supabase.from("seats")
+      .update({ status: next })
+      .eq("id", seat.id);
+
+    loadSeats();
+  }
+
+  loadSeats();
+</script>
+
+</body>
+</html>
